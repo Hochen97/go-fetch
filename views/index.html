@@ -1,19 +1,153 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Twitter Mosaic Creator</title>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-        <script src="https://cdn.auth0.com/js/auth0/9.0/auth0.min.js"></script>
-        <script type="application/javascript" src="https://unpkg.com/react@16.0.0/umd/react.production.min.js"></script>
-        <script type="application/javascript" src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js"></script>
-        <script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
-        <script type="text/babel" src="js/app.jsx"></script>
-        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-    </head>
+  <head>
+    <title>Twitter Mosaic Creator</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- <link rel="stylesheet" href="/stylesheets/style.css"> -->
+    <style>
+      body {
+        padding: 50px;
+        font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+      }
+      table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
 
-    <body>
-        <div id="app"></div>
-    </body>
+      td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+      }
+
+      tr:nth-child(even) {
+        background-color: #dddddd;
+      }
+      a {
+        color: #00B7FF;
+      }
+      #search {
+        text-align: center;
+        width:500px;
+        height: 70px;
+        font-size:3.5em;
+        border-radius:8px;
+      }
+      #main{
+          float: left;
+          margin-left: 25%;
+          width: 50%;
+          margin-bottom: 10%;
+      }
+      #formSect {
+          text-align: center;
+          border-radius: 5px;
+          background-color: #f2f2f2;
+          padding: 20px;
+      }
+      input[type=text], select{
+          text-align: center;
+          font-size: 14px;
+          width: 100%;
+          padding: 12px 20px;
+          margin: 8px 0;
+          display: inline-block;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-sizing: border-box;
+      }
+      img{
+        width: 25%;
+        heigh: 25%;
+      }
+    </style>
+
+<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<!-- <script src="https://cdn.auth0.com/js/auth0/9.0/auth0.min.js"></script>
+<script type="application/javascript" src="https://unpkg.com/react@16.0.0/umd/react.production.min.js"></script>
+<script type="application/javascript" src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js"></script>
+<script type="application/javascript" src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script type="text/babel" src="js/app.jsx"></script> -->
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div id="main">
+      <div id="formSect">
+        <form id="queryForm" action="">
+          <label for="track">Tracking terms</label>
+          <p>(" " = AND | , = OR)</p>
+          <input id="q" name="track" type="text"/><br/><br/>
+          <label for="language">Language</label><br/>
+          <input id="submit" type="submit" href="#"/>
+        </form>
+      </div><br/>
+      <div id='results'>
+        <table id='resultsTable'>
+          <th/>Twitter Username
+          <th/>Picture
+          <th/>Approve/Deny
+        </table>
+      </div>
+    </div>
+    <script>
+        url = "ws://localhost:3000/api/ws"
+        c = new WebSocket(url);
+
+        $(function(){
+        $('#queryForm').submit(querySubmit);
+
+        function querySubmit(){
+            var formdata = $(this).serializeArray();
+            var data = {};
+            $(formdata).each(function(index, obj){
+                data[obj.name] = obj.value;
+            });
+            var json = JSON.stringify(data)
+            $("#resultsTable").prepend("Starting search for keyword of " + data.track)
+            // alert(JSON.stringify(data))
+            c.send(json)
+
+            return false;
+        }
+
+        c.onmessage = function(msg){
+          alert(msg.data)
+            // data = JSON.parse(msg.data)
+            // $("#resultsTable").prepend(`<tr><td>${msg.UserName}</td><td><img src=${msg.TweetURL}></td><td><button id='approve' data-imgid=''>Approve</button><button id='deny' data-imgid=''>Deny</button></td>`)
+            console.log(msg)
+        }
+
+        // function querySubmit(){
+        //     var formdata = $(this).serializeArray();
+        //     var data = {};
+        //     $(formdata).each(function(index, obj){
+        //         data[obj.name] = obj.value;
+        //     });
+
+        //     socket.emit('search', data);
+
+        //     return false;
+        // }
+        // socket.on('result', function(msg){
+        //   // var results = JSON.parse(msg);
+        //   // alert(results[UserName]);
+        //   // $('#results').append('<br />'+msg);
+        //   // alert(msg.UserName);
+        //   $('#resultsTable').append(`<tr><td>${msg.UserName}</td><td><img src=${msg.TweetURL}></td><td><button id='approve' data-imgid=''>Approve</button><button id='deny' data-imgid=''>Deny</button></td>`);
+        // });
+        // socket.on('message', function(msg){
+        //   $('#results').append('<br />'+msg);
+        // });
+
+        // $('#approve').on('click', approvePic);
+
+        // function approvePic(){
+        //   var imgID = $(this).data(imgid);
+        // }
+        });
+    </script>
+  </body>
 </html>
